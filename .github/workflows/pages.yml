@@ -3,8 +3,12 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Release containing the verified site ZIP
+        description: Release containing the verified site ZIP or overlay
         required: true
+        type: string
+      baseline_tag:
+        description: Full Pages release to reuse when publishing an overlay
+        required: false
         type: string
 
 permissions:
@@ -18,15 +22,44 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-      - name: Download and check the site
+      - name: Assemble and check the site
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
+          BASELINE_TAG: ${{ inputs.baseline_tag }}
         run: |
-          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern inn2-pages.zip --pattern SHA256SUMS
-          sed -i 's/\r$//' SHA256SUMS
-          sha256sum -c SHA256SUMS
-          unzip -q inn2-pages.zip -d site
+          mkdir -p base overlay site
+          gh release download "${BASELINE_TAG:-$RELEASE_TAG}" --repo "$GITHUB_REPOSITORY" \
+            --pattern inn2-pages.zip --pattern SHA256SUMS --dir base
+          (cd base && sed -i 's/\r$//' SHA256SUMS && sha256sum -c SHA256SUMS)
+          unzip -q base/inn2-pages.zip -d site
+          if [ -n "$BASELINE_TAG" ]; then
+            gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+              --pattern inn2-pages-overlay.zip --pattern SHA256SUMS --dir overlay
+            (cd overlay && sed -i 's/\r$//' SHA256SUMS && sha256sum -c SHA256SUMS)
+            python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import re
+          from zipfile import ZipFile
+          root = Path("site").resolve()
+          assets = root / "assets"
+          with ZipFile("overlay/inn2-pages-overlay.zip") as archive:
+              for name in json.loads(archive.read("remove.json")):
+                  file = (root / name).resolve()
+                  if not file.is_relative_to(assets):
+                      raise ValueError(f"Invalid removal: {name}")
+                  file.unlink(missing_ok=True)
+              for info in archive.infolist():
+                  name = info.filename
+                  if name == "remove.json":
+                      continue
+                  file = (root / name).resolve()
+                  if not re.fullmatch(r"[A-Za-z0-9_./ -]+", name) or not file.is_relative_to(root) or file == root:
+                      raise ValueError(f"Invalid overlay path: {name}")
+                  archive.extract(info, root)
+          PY
+          fi
           test -f site/index.html
           test "$(find site -type f -printf '%s\n' | awk '{sum += $1} END {printf "%.0f", sum}')" -lt 1000000000
       - uses: actions/upload-pages-artifact@v4
