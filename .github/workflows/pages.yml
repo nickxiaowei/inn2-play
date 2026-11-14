@@ -1,0 +1,45 @@
+name: Publish Inn2
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release containing the verified site ZIP
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download and check the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern inn2-pages.zip --pattern SHA256SUMS
+          sha256sum -c SHA256SUMS
+          unzip -q inn2-pages.zip -d site
+          test -f site/index.html
+          test "$(find site -type f -printf '%s\n' | awk '{sum += $1} END {printf "%.0f", sum}')" -lt 1000000000
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+  deploy:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
