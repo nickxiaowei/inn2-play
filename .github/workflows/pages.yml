@@ -24,6 +24,7 @@ jobs:
           RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --pattern inn2-pages.zip --pattern SHA256SUMS
+          sed -i 's/\r$//' SHA256SUMS
           sha256sum -c SHA256SUMS
           unzip -q inn2-pages.zip -d site
           test -f site/index.html
