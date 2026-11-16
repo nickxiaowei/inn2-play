@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>中华客栈2：满汉传奇</title>
+  <link rel="icon" href="assets/images/pe/101-1-1028.ico">
+  <link rel="stylesheet" href="inn2.css">
+  <script defer src="inn2.js"></script>
+</head>
+<body>
+  <main class="inn2-viewport">
+    <div class="inn2-stage" id="inn2-stage" data-screen="loading">
+      <img class="inn2-startup" id="inn2-startup" hidden
+        width="640" height="480" alt="" fetchpriority="high" draggable="false">
+      <canvas id="inn2-canvas" width="1920" height="1440" tabindex="0" aria-label="中华客栈2"></canvas>
+      <video id="inn2-cutscene" width="640" height="480" preload="none" playsinline
+        disablepictureinpicture disableremoteplayback hidden></video>
+      <div class="inn2-ending-prompt" id="inn2-ending-prompt" hidden>
+        <button id="inn2-play-ending" type="button">播放结尾</button>
+        <span>Esc 跳过</span>
+      </div>
+      <p id="inn2-status" class="inn2-status" role="status" hidden></p>
+      <div class="inn2-opening-load inn2-scene-load" id="inn2-scene-load">
+        <div class="inn2-opening-load-panel">
+          <p id="inn2-scene-load-label" role="status">正在载入游戏…</p>
+          <progress aria-labelledby="inn2-scene-load-label"></progress>
+        </div>
+      </div>
+      <div class="inn2-opening-load" id="inn2-opening-load" hidden>
+        <div class="inn2-opening-load-panel">
+          <p id="inn2-opening-load-label" role="status"></p>
+          <progress max="3" aria-labelledby="inn2-opening-load-label"></progress>
+          <div class="inn2-opening-load-actions" hidden>
+            <button type="button">重试</button>
+            <button type="button">返回重选</button>
+          </div>
+        </div>
+      </div>
+      <button type="button" id="inn2-save-code-open" hidden>存档码</button>
+      <noscript><p class="inn2-status">请启用 JavaScript 以操作游戏界面。</p></noscript>
+    </div>
+    <div class="inn2-touch-controls" id="inn2-touch-controls" hidden aria-label="触屏操作">
+      <button type="button" data-touch="back" hidden>返回</button>
+      <button type="button" data-touch="view" hidden>斜视</button>
+      <button type="button" data-touch="rotate" hidden>旋转</button>
+      <button type="button" data-touch="help" hidden aria-pressed="false">查看说明</button>
+      <span data-touch="hint" role="status" hidden></span>
+    </div>
+  </main>
+  <dialog id="inn2-save-code" aria-labelledby="inn2-save-code-title">
+    <h2 id="inn2-save-code-title">存档码</h2>
+    <label id="inn2-save-code-slot-label" for="inn2-save-code-slot">存档槽</label>
+    <select id="inn2-save-code-slot"></select>
+    <label for="inn2-save-code-text">存档码</label>
+    <textarea id="inn2-save-code-text" rows="3" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+    <p id="inn2-save-code-summary" role="status"></p>
+    <label id="inn2-save-code-replace" hidden><input type="checkbox"> 覆盖目标槽的原存档</label>
+    <div class="inn2-save-code-actions">
+      <button type="button" id="inn2-save-code-accept">继续</button>
+      <button type="button" id="inn2-save-code-close">返回</button>
+    </div>
+  </dialog>
+</body>
+</html>
